@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//home/william/SCHOOL/412project/**)",
+      "Bash(./venv/bin/pip install *)",
+      "Bash(./venv/bin/pytest tests/ -q)"
+    ]
+  }
+}
