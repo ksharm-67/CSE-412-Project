@@ -1,7 +1,7 @@
 import api from './axiosInstance.js'
 
 function getTechnicianOrders(id) {
-    return api.get('/technicians/${id}/orders');
+    return api.get(`/technicians/${id}/orders`);
 }
 
 function getBusiestTechnician(){

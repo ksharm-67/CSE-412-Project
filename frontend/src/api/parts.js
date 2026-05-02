@@ -5,11 +5,11 @@ function getParts() {
 }
 
 function updatePart(id, data) {
-    return api.put('/parts/${id}', data);
+    return api.put(`/parts/${id}`, data);
 }
 
 function restockPart(id, qty) {
-    return api.patch('/parts/${id}/restock', qty);
+    return api.patch(`/parts/${id}/restock`, qty);
 }
 
 export { getParts, updatePart, restockPart };
