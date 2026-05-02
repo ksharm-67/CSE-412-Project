@@ -6,11 +6,12 @@ from routes.devices import bp as devices_bp
 from routes.technicians import bp as technicians_bp
 from routes.parts import bp as parts_bp
 from routes.repair_orders import bp as repair_orders_bp
-
+from flask_cors import CORS
 
 def create_app(config=None):
     app = Flask(__name__)
     app.config.from_object(Config)
+    CORS(app)
     if config:
         app.config.update(config)
 
@@ -34,3 +35,5 @@ if __name__ == "__main__":
     with app.app_context():
         db.create_all()
     app.run(debug=True)
+    
+
