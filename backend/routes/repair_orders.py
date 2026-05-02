@@ -173,6 +173,31 @@ def update_status(repairkey):
     return jsonify(order.to_dict())
 
 
+@bp.route("/<int:repairkey>/hours", methods=["POST"])
+def log_hours(repairkey):
+    """Add labor hours to an order; cost increases by hours * technician hourly rate."""
+    order = db.get_or_404(RepairOrder, repairkey)
+    data = request.get_json()
+    hours = data.get("hours")
+
+    if hours is None:
+        return jsonify({"error": "hours field required"}), 400
+    try:
+        hours = float(hours)
+    except (TypeError, ValueError):
+        return jsonify({"error": "hours must be a number"}), 400
+    if hours <= 0:
+        return jsonify({"error": "hours must be positive"}), 400
+
+    tech = db.session.get(Technician, order.ro_techkey)
+    if not tech:
+        return jsonify({"error": "Assigned technician not found"}), 404
+
+    order.ro_totalcost = float(order.ro_totalcost) + float(tech.t_hourlyrate) * hours
+    db.session.commit()
+    return jsonify(order.to_dict())
+
+
 @bp.route("/<int:repairkey>", methods=["DELETE"])
 def delete_order(repairkey):
     order = db.get_or_404(RepairOrder, repairkey)
@@ -208,11 +233,13 @@ def add_part_to_order(repairkey):
     if part.p_stockqty < qty:
         return jsonify({"error": f"Insufficient stock. Available: {part.p_stockqty}"}), 400
 
+    line_cost = part.p_unitprice * qty
+    order.ro_totalcost = order.ro_totalcost + line_cost
+
     existing = OrderParts.query.filter_by(
         o_repairkey=repairkey, o_partkey=data["p_partkey"]
     ).first()
     if existing:
-        # Add to existing quantity
         part.p_stockqty -= qty
         existing.o_qtyused += qty
         db.session.commit()
@@ -232,7 +259,7 @@ def add_part_to_order(repairkey):
 @bp.route("/<int:repairkey>/parts/<int:partkey>", methods=["DELETE"])
 def remove_part_from_order(repairkey, partkey):
     """Remove a part from a repair order and restore inventory."""
-    db.get_or_404(RepairOrder, repairkey)
+    order = db.get_or_404(RepairOrder, repairkey)
     entry = OrderParts.query.filter_by(
         o_repairkey=repairkey, o_partkey=partkey
     ).first_or_404()
@@ -240,6 +267,7 @@ def remove_part_from_order(repairkey, partkey):
     part = db.session.get(Part, partkey)
     if part:
         part.p_stockqty += entry.o_qtyused
+        order.ro_totalcost = order.ro_totalcost - (part.p_unitprice * entry.o_qtyused)
 
     db.session.delete(entry)
     db.session.commit()

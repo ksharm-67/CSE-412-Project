@@ -13,7 +13,7 @@ function createOrder(data) {
 }
 
 function updateOrderStatus(id, status) {
-    return api.patch(`/orders/${id}/parts`, status);
+    return api.patch(`/orders/${id}/status`, { status });
 }
 
 function getOrderParts(id) {
@@ -28,4 +28,8 @@ function removeOrderPart(id, partId) {
     return api.delete(`/orders/${id}/parts/${partId}`);
 }
 
-export { updateOrderStatus, getOrderParts, addOrderParts, removeOrderPart, getOrder, getAllOrders, createOrder };
+function logOrderHours(id, hours) {
+    return api.post(`/orders/${id}/hours`, { hours });
+}
+
+export { updateOrderStatus, getOrderParts, addOrderParts, removeOrderPart, getOrder, getAllOrders, createOrder, logOrderHours };
